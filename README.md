@@ -13,6 +13,43 @@ restored from the last released jar (`albedo-1.12.2-1.1.0`), since the 1.12 code
 abandoned 1.13.2 port was replaced. Mods built against Albedo 1.1.0 or 0.1.x keep working: the public API
 (`elucent.albedo.*`) is unchanged, and the old 0.1.x methods are back as deprecated bridges.
 
+## Fixes compared to Albedo 1.1.0
+
+Issue numbers refer to the [original issue tracker](https://github.com/MysticMods/Albedo/issues).
+
+### Fixed issues
+
+- Crash `NoSuchMethodError: LightManager.addLight` with mods built for the old 0.1.x API, e.g. WeissAlbedo
+  ([#2](https://github.com/MysticMods/Albedo/issues/2), [#11](https://github.com/MysticMods/Albedo/issues/11))
+- Crash when a null light is added ([#5](https://github.com/MysticMods/Albedo/issues/5))
+- The block-light scanning thread read the world off the main thread and kept a CPU core at 100%; it is now a
+  budgeted scan on the client thread ([#3](https://github.com/MysticMods/Albedo/issues/3))
+- Mobs turning dark/fog-coloured more than ~10 blocks away in the Nether ([#10](https://github.com/MysticMods/Albedo/issues/10))
+- Light positions snapping to a grid far from the world origin ([#8](https://github.com/MysticMods/Albedo/issues/8))
+- Albedo now pauses its shaders while another mod (e.g. BetterPortals) uses vanilla's shader system
+  ([#4](https://github.com/MysticMods/Albedo/issues/4))
+- Lights fully enclosed in solid blocks no longer shine through; the new optional `blockLightOcclusion` setting stops
+  coloured light passing through walls ([#1](https://github.com/MysticMods/Albedo/issues/1), [#6](https://github.com/MysticMods/Albedo/issues/6))
+
+### Other fixes
+
+- Lights created with the old 8-argument `Light` constructor were invisible
+- All-direction lights were 4x dimmer below the light than above it
+- Possible black/garbage pixels from spot lights
+- `maxLights` above 100 overflowed the shaders' light array; it is now capped at 100
+- Held or worn light-giving items had no effect on players
+- The first-person hand and particles were lit from the wrong positions
+- Render code was triggered from the singleplayer server thread
+- Albedo no longer patches anything on dedicated servers
+- More robust coremod patches; a failed patch is logged instead of crashing the game
+- A shader error disables Albedo lighting instead of crashing; no shader or file handle leaks on resource reload
+- Faster uniform updates; in-game config changes are now saved
+
+### Not fixed
+
+- [#9](https://github.com/MysticMods/Albedo/issues/9) (crash next to water) is a bug in AlbedoTorches, not Albedo
+- [#7](https://github.com/MysticMods/Albedo/issues/7) (black screen on join) could not be reproduced
+
 ## Building
 
 The build uses [RetroFuturaGradle](https://github.com/GTNewHorizons/RetroFuturaGradle) (RFG) 1.4.x on Gradle 8.14.
