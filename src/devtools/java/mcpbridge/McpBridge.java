@@ -52,6 +52,8 @@ public class McpBridge {
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
+        // the dev client is driven remotely while its window is usually in the background: don't open the pause menu
+        net.minecraft.client.Minecraft.getMinecraft().gameSettings.pauseOnLostFocus = false;
         Handlers handlers = new Handlers();
         MinecraftForge.EVENT_BUS.register(handlers);
         try {

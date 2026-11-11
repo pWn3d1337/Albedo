@@ -219,6 +219,11 @@ public final class Handlers {
             KeyBinding.unPressAllKeys();
             return playerState();
         }));
+        // dev-bridge extension: camera perspective, 0 = first person, 1 = third person back, 2 = third person front
+        methods.put("control.perspective", p -> onClient(() -> {
+            Minecraft.getMinecraft().gameSettings.thirdPersonView = MathHelper.clamp(p.get("mode").getAsInt(), 0, 2);
+            return playerState();
+        }));
         methods.put("control.jumpOnce", p -> onClient(() -> {
             KeyBinding.setKeyBindState(Minecraft.getMinecraft().gameSettings.keyBindJump.getKeyCode(), true);
             releaseJumpAt = clientTicks + 3;
