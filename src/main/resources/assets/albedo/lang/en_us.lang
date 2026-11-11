@@ -1,0 +1,10 @@
+albedo.config.maxLights=Max lights
+albedo.config.maxLights.tooltip=The maximum number of lights rendered in a scene (nearest first, at most 100).
+albedo.config.maxDistance=Max light distance
+albedo.config.maxDistance.tooltip=The maximum distance lights can be before being culled.
+albedo.config.disableLights=Disable lighting
+albedo.config.disableLights.tooltip=Disables Albedo lighting.
+albedo.config.blockLightOcclusion=Block light occlusion
+albedo.config.blockLightOcclusion.tooltip=Fade coloured light out where vanilla block light is 0, so solid walls block it. Lights that have no vanilla light level (e.g. held items) are hidden as well.
+albedo.config.holiday=Holiday events
+albedo.config.holiday.tooltip=Holiday events.

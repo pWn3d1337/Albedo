@@ -1,0 +1,16 @@
+[
+{
+  "modid": "albedo",
+  "name": "Albedo",
+  "description": "Effects and lighting library.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://github.com/MysticMods/Albedo",
+  "updateUrl": "",
+  "authorList": ["Horizon Studio", "Coded", "Elucent"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

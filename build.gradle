@@ -1,61 +1,79 @@
-buildscript {
-    repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+// Albedo (Minecraft 1.12.2 Forge) built with RetroFuturaGradle.
+// See README.md for the commands and JDK requirements.
+plugins {
+    id 'java'
+    id 'com.gtnewhorizons.retrofuturagradle' version '1.4.9'
+}
+
+// CI dev builds pass -Pdev_build=<run number>: version <mod_version>-dev.<n>
+if (project.hasProperty('dev_build')) {
+    project.ext.mod_version = "${project.mod_version}-dev.${project.dev_build}"
+}
+
+version = "${project.mc_version}-${project.mod_version}"
+group = 'elucent.albedo'
+
+base {
+    archivesName = 'albedo'
+}
+
+java {
+    toolchain {
+        // Minecraft 1.12.2 runs on Java 8 only. Gradle uses an installed JDK 8 or downloads one (Foojay).
+        languageVersion = JavaLanguageVersion.of(8)
     }
 }
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
 
-version = '1.1.0-rc.1'
-group = 'com.hrznstudio'
-archivesBaseName = 'Albedo'
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+// Forge: RFG pins 1.12.2 to 14.23.5.2847, the last build published with a userdev jar.
+// The mod itself runs on any 14.23.5.x Forge.
 
 minecraft {
-    mappings channel: 'snapshot', version: '20180921-1.13'
-    runs {
-        client = {
-            properties 'forge.logging.markers': 'SCAN,REGISTRIES,REGISTRYDUMP'
-            properties 'forge.logging.console.level': 'debug'
-            workingDirectory project.file('run').canonicalPath
-            source sourceSets.main
-        }
-        server = {
-            properties 'forge.logging.markers': 'SCAN,REGISTRIES,REGISTRYDUMP'
-            properties 'forge.logging.console.level': 'debug'
-            workingDirectory project.file('run').canonicalPath
-            source sourceSets.main
-        }
+    mcVersion = project.mc_version
+    mcpMappingChannel = project.mapping_channel
+    mcpMappingVersion = project.mapping_version
+    username = 'Developer'
+
+    // Albedo is a coremod (ASM hooks into the renderer); in dev it must be named explicitly
+    extraRunJvmArguments.add('-Dfml.coreMods.load=elucent.albedo.asm.FMLPlugin')
+    // Test lights on torches, lit redstone lamps, sea lanterns, glowstone and a held blaze rod (see DebugLights)
+    extraRunJvmArguments.add('-Dalbedo.debugLights=true')
+    // ./gradlew runClient -PalbedoAutoTest: unattended smoke test with screenshots (see AutoTest)
+    if (project.hasProperty('albedoAutoTest')) {
+        extraRunJvmArguments.add('-Dalbedo.autoTest=true')
     }
 }
 
-repositories {
-    mavenCentral()
-    jcenter()
-    maven {
-        name = "forge"
-        url = "http://files.minecraftforge.net/maven"
+// Dev-only tools (src/devtools): an MCP bridge mod for the dev client, compatible with the mcpfabric MCP server.
+// They are on the runClient classpath only and never part of the Albedo jar.
+sourceSets {
+    devtools {
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
     }
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.13.2-25.0.70'
+    runtimeOnly sourceSets.devtools.output
+}
+
+processResources {
+    inputs.property 'version', project.mod_version
+    inputs.property 'mcversion', project.mc_version
+
+    filesMatching('mcmod.info') {
+        expand 'version': project.mod_version, 'mcversion': project.mc_version
+    }
 }
 
 jar {
     manifest {
-        attributes(["Specification-Title": "Minecraft Forge",
-                    "Specification-Vendor": "Minecraft Forge",
-                    "Specification-Version": "25",
-                    "Implementation-Title": project.name,
-                    "Implementation-Version": "${version}",
-                    "Implementation-Vendor" :"Horizon Studio",
-                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")],)
+        attributes(
+                'FMLCorePlugin': 'elucent.albedo.asm.FMLPlugin',
+                'FMLCorePluginContainsFMLMod': 'true'
+        )
     }
 }

@@ -6,24 +6,37 @@ varying vec4 uv;
 
 uniform sampler2D sampler;
 uniform sampler2D lightmap;
+// Camera-relative eye position (fog distance is measured from it)
 uniform vec3 playerPos;
-uniform int chunkX;
-uniform int chunkZ;
+// Active GL fog mode: 0 = fog off, 9729 = GL_LINEAR, 2048 = GL_EXP, 2049 = GL_EXP2
+uniform int fogMode;
+// 1 = fade coloured light out where vanilla block light is 0 (walls block it)
+uniform int blockLightOcclusion;
 
-float round(float f) {
-	if (fract(f) < 0.5f) {
-		return f - fract(f);
-	} else {
-		return f + (1.0f-fract(f));
+float fogFactor(float dist) {
+	if (fogMode == 2048) {
+		return clamp(exp(-gl_Fog.density * dist), 0.0, 1.0);
+	} else if (fogMode == 2049) {
+		float d = gl_Fog.density * dist;
+		return clamp(exp(-d * d), 0.0, 1.0);
+	} else if (fogMode == 9729) {
+		return clamp((gl_Fog.end - dist) * gl_Fog.scale, 0.0, 1.0);
 	}
+	return 1.0;
 }
 
 void main() {
 	vec3 lightdark = texture2D(lightmap,gl_TexCoord[1].st).xyz;
-	lightdark = clamp(lightdark, 0.0f, 1.0f);
+	lightdark = clamp(lightdark, 0.0, 1.0);
 
-	vec3 lcolor_2 = clamp(lcolor.xyz*intens, 0.0f, 1.0f);
-	
+	vec3 lcolor_2 = clamp(lcolor.xyz*intens, 0.0, 1.0);
+
+	if (blockLightOcclusion == 1) {
+		//lightmap u = (block light * 16 + 8) / 256; full colour from block light 3 upwards
+		float blockLight = clamp((gl_TexCoord[1].s * 256.0 - 8.0) / 240.0, 0.0, 1.0);
+		lcolor_2 *= clamp(blockLight * 5.0, 0.0, 1.0);
+	}
+
 	//lightdark = lightdark + lcolor_2;   //More washed-out, but more physically correct
 	lightdark = max(lightdark, lcolor_2); //Vivid but unrealistic
 
@@ -35,18 +48,8 @@ void main() {
 	//baseColor = vec4(lcolor_2.xyz,1);
 
 	//Fog
-	vec3 dv = position-playerPos;
-	float dist = max(sqrt(dv.x*dv.x+dv.y*dv.y+dv.z*dv.z) - gl_Fog.start,0.0f) / (gl_Fog.end-gl_Fog.start);
-	float fog = gl_Fog.density * dist;
-	fog = 1.0f-clamp( fog, 0.0f, 1.0f );
-	baseColor = vec4(mix( vec3( gl_Fog.color ), baseColor.xyz, fog ).xyz,baseColor.w);
-
-
+	float fog = fogFactor(length(position - playerPos));
+	baseColor = vec4(mix(vec3(gl_Fog.color), baseColor.xyz, fog), baseColor.w);
 
 	gl_FragColor = baseColor;
-
-	/*
-	vec4 color = vec4(max(mix(baseColor.xyz*lightdark,baseColor.xyz*lcolor.xyz,intens),lightdark*baseColor.xyz),baseColor.w);
-	gl_FragColor = color;
-	*/
 }

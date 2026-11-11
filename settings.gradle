@@ -1,2 +1,22 @@
-rootProject.name = 'Albedo'
+pluginManagement {
+    repositories {
+        maven {
+            // RetroFuturaGradle
+            name = 'GTNH Maven'
+            url = 'https://nexus.gtnewhorizons.com/repository/public/'
+            mavenContent {
+                includeGroup 'com.gtnewhorizons'
+                includeGroup 'com.gtnewhorizons.retrofuturagradle'
+            }
+        }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
 
+plugins {
+    // Downloads a Java 8 toolchain if none is installed
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'Albedo'
