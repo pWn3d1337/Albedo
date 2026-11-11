@@ -1,12 +1,14 @@
-Albedo
+Albedo Updated
 ==
-[>> Downloads <<](https://www.curseforge.com/minecraft/mc-mods/albedo)
+[>> Dev builds <<](https://github.com/pWn3d1337/Albedo/releases/tag/dev) · [Original Albedo on CurseForge](https://www.curseforge.com/minecraft/mc-mods/albedo)
 
 *API-Powered luminous curiosities with rendering trickery.*
 
 **This mod is open source and under a permissive license.** As such, it can be included in any modpack on any platform without prior permission. See the [LICENSE file](https://github.com/MysticMods/Albedo/blob/master/LICENSE) for more details.
 
-This branch is the **Minecraft 1.12.2** version of Albedo (package `elucent.albedo`). The 1.12.2 source was
+**Albedo Updated** is a maintained fork of Albedo for **Minecraft 1.12.2**, released as `albedo-updated-<mc>-<version>.jar`.
+It is a drop-in replacement for the original: it keeps the mod id `albedo` and the API, so remove the original
+Albedo jar when installing it. This is the 1.12.2 version of Albedo (package `elucent.albedo`). The 1.12.2 source was
 restored from the last released jar (`albedo-1.12.2-1.1.0`), since the 1.12 code was never pushed here, and the
 abandoned 1.13.2 port was replaced. Mods built against Albedo 1.1.0 or 0.1.x keep working: the public API
 (`elucent.albedo.*`) is unchanged, and the old 0.1.x methods are back as deprecated bridges.

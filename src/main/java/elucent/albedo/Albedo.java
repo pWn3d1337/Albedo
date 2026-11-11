@@ -36,7 +36,7 @@ import java.util.Map;
 )
 public class Albedo {
     public static final String MODID = "albedo";
-    public static final String NAME = "Albedo";
+    public static final String NAME = "Albedo Updated";
 
     private static final Map<Block, TriConsumer<BlockPos, IBlockState, GatherLightsEvent>> MAP = new IdentityHashMap<>();
 

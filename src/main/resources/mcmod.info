@@ -1,11 +1,11 @@
 [
 {
   "modid": "albedo",
-  "name": "Albedo",
-  "description": "Effects and lighting library.",
+  "name": "Albedo Updated",
+  "description": "Effects and lighting library. Maintained 1.12.2 fork of Albedo with bug and crash fixes; drop-in replacement (mod id albedo).",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "https://github.com/MysticMods/Albedo",
+  "url": "https://github.com/pWn3d1337/Albedo",
   "updateUrl": "",
   "authorList": ["Horizon Studio", "Coded", "Elucent"],
   "credits": "",

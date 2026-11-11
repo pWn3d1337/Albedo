@@ -14,7 +14,7 @@ version = "${project.mc_version}-${project.mod_version}"
 group = 'elucent.albedo'
 
 base {
-    archivesName = 'albedo'
+    archivesName = 'albedo-updated'
 }
 
 java {
