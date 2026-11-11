@@ -11,6 +11,8 @@ uniform vec3 playerPos;
 uniform int fogMode;
 // 1 = fade coloured light out where vanilla block light is 0 (walls block it)
 uniform int blockLightOcclusion;
+// Hurt (red) / creeper flash (white) overlay of RenderLivingBase.setBrightness: rgb blended in by a; a = 0 when off
+uniform vec4 overlayColor;
 
 float fogFactor(float dist) {
 	if (fogMode == 2048) {
@@ -41,6 +43,7 @@ void main() {
 
 	//combine texture with lighting
 	vec4 baseColor = gl_Color * texture2D(sampler,gl_TexCoord[0].st);
+	baseColor.rgb = mix(baseColor.rgb, overlayColor.rgb, overlayColor.a);
 	baseColor = baseColor * vec4(lightdark, 1);
 
 	//debug

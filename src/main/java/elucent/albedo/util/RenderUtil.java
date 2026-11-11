@@ -6,7 +6,11 @@ import elucent.albedo.event.RenderChunkUniformsEvent;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraft.client.renderer.OpenGlHelper;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+
+import java.nio.FloatBuffer;
 
 public class RenderUtil {
     public static boolean lightingEnabled = false;
@@ -56,6 +60,31 @@ public class RenderUtil {
     public static void resetLightingState() {
         enabledLast = false;
         previousShader = null;
+    }
+
+    /**
+     * Called by the coremod from GlStateManager.glTexEnv. RenderLivingBase.setBrightness tints hurt mobs red (and
+     * flashing creepers white) with a texture combiner on the lightmap unit: colour = mix(colour, envColor.rgb,
+     * envColor.a). Shaders bypass texture combiners, so the entity shader gets the colour as a uniform instead.
+     */
+    public static void onTexEnv(int target, int pname, FloatBuffer params) {
+        if (target != GL11.GL_TEXTURE_ENV || pname != GL11.GL_TEXTURE_ENV_COLOR || params == null || params.remaining() < 4
+                || !ShaderManager.isCurrentShader(ShaderUtil.entityLightProgram)) {
+            return;
+        }
+        // GlStateManager.enableOutlineMode sets the colour of texture unit 0; only the lightmap unit's is the overlay
+        if (GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE) != OpenGlHelper.lightmapTexUnit) {
+            return;
+        }
+        int p = params.position();
+        ShaderUtil.entityLightProgram.setUniform("overlayColor", params.get(p), params.get(p + 1), params.get(p + 2), params.get(p + 3));
+    }
+
+    /** Called by the coremod from RenderLivingBase.unsetBrightness, and before each entity is rendered. */
+    public static void clearEntityOverlay() {
+        if (ShaderManager.isCurrentShader(ShaderUtil.entityLightProgram)) {
+            ShaderUtil.entityLightProgram.setUniform("overlayColor", 0f, 0f, 0f, 0f);
+        }
     }
 
     /** Called by the coremod from ForgeHooksClient.handleCameraTransforms. */

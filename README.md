@@ -39,6 +39,9 @@ Issue numbers refer to the [original issue tracker](https://github.com/MysticMod
 - `maxLights` above 100 overflowed the shaders' light array; it is now capped at 100
 - Held or worn light-giving items had no effect on players
 - The first-person hand and particles were lit from the wrong positions
+- Players, mobs, dropped items and block entities lost vanilla's directional shading: all faces were equally
+  bright, so they looked too bright and flat (e.g. a dropped ice block)
+- Damaged mobs did not flash red, and creepers about to explode did not flash white
 - Render code was triggered from the singleplayer server thread
 - Albedo no longer patches anything on dedicated servers
 - More robust coremod patches; a failed patch is logged instead of crashing the game

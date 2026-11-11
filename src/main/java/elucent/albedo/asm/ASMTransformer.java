@@ -50,6 +50,8 @@ public class ASMTransformer implements IClassTransformer {
                     return patchTERenderer(basicClass, obfuscated);
                 case "net.minecraft.client.renderer.GlStateManager":
                     return patchGlStateManager(basicClass, obfuscated);
+                case "net.minecraft.client.renderer.entity.RenderLivingBase":
+                    return patchRenderLivingBase(basicClass, obfuscated);
                 case "net.minecraft.client.renderer.OpenGlHelper":
                     return patchOpenGlHelper(basicClass, obfuscated);
                 case "net.minecraft.profiler.Profiler":
@@ -75,10 +77,15 @@ public class ASMTransformer implements IClassTransformer {
                 insertAtStart(m, load(1), call("elucent/albedo/util/RenderUtil", "setTransform", "(" + transformType + ")V")));
     }
 
-    /** GlStateManager.enableLighting() / disableLighting(): switch the entity shader's lighting uniform. */
+    /**
+     * GlStateManager.enableLighting() / disableLighting(): switch the entity shader's lighting uniform.
+     * GlStateManager.glTexEnv(int, int, FloatBuffer): pass the hurt/creeper-flash overlay colour that
+     * RenderLivingBase.setBrightness sets up with texture combiners (which shaders bypass) to the entity shader.
+     */
     private byte[] patchGlStateManager(byte[] bytes, boolean obfuscated) {
         String enableLighting = obfuscated ? "func_179145_e" : "enableLighting";
         String disableLighting = obfuscated ? "func_179140_f" : "disableLighting";
+        String glTexEnv = obfuscated ? "func_187448_b" : "glTexEnv";
         ClassNode classNode = read(bytes);
         int patched = 0;
         for (MethodNode m : classNode.methods) {
@@ -88,9 +95,13 @@ public class ASMTransformer implements IClassTransformer {
             } else if (m.desc.equals("()V") && m.name.equals(disableLighting)) {
                 insertAtStart(m, call("elucent/albedo/util/RenderUtil", "disableLightingUniforms", "()V"));
                 patched++;
+            } else if (m.desc.equals("(IILjava/nio/FloatBuffer;)V") && m.name.equals(glTexEnv)) {
+                insertAtStart(m, new VarInsnNode(Opcodes.ILOAD, 0), new VarInsnNode(Opcodes.ILOAD, 1), load(2),
+                        call("elucent/albedo/util/RenderUtil", "onTexEnv", "(IILjava/nio/FloatBuffer;)V"));
+                patched++;
             }
         }
-        return write(bytes, classNode, "GlStateManager", patched == 2);
+        return write(bytes, classNode, "GlStateManager", patched == 3);
     }
 
     /**
@@ -102,6 +113,13 @@ public class ASMTransformer implements IClassTransformer {
         String useProgram = obfuscated ? "func_153161_d" : "glUseProgram";
         return patch(bytes, "OpenGlHelper", useProgram, "(I)V", m ->
                 insertAtStart(m, new VarInsnNode(Opcodes.ILOAD, 0), call("elucent/albedo/util/ShaderManager", "onExternalUseProgram", "(I)V")));
+    }
+
+    /** RenderLivingBase.unsetBrightness(): the hurt/flash overlay of the entity shader ends. */
+    private byte[] patchRenderLivingBase(byte[] bytes, boolean obfuscated) {
+        String unsetBrightness = obfuscated ? "func_177091_f" : "unsetBrightness";
+        return patch(bytes, "RenderLivingBase", unsetBrightness, "()V", m ->
+                insertAtStart(m, call("elucent/albedo/util/RenderUtil", "clearEntityOverlay", "()V")));
     }
 
     /** TileEntityRendererDispatcher.render(TileEntity, float, int): post RenderTileEntityEvent. */

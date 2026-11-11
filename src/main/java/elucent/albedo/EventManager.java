@@ -93,7 +93,9 @@ public class EventManager {
             case "entities":
             case "blockEntities":
                 beginLightProgram(ShaderUtil.entityLightProgram);
-                ShaderUtil.entityLightProgram.setUniform("lightingEnabled", true);
+                // the shader applies the fixed-function item/mob shading itself while GL_LIGHTING is on
+                ShaderUtil.entityLightProgram.setUniform("lightingEnabled", GL11.glIsEnabled(GL11.GL_LIGHTING));
+                RenderUtil.clearEntityOverlay();
                 break;
             case "hand":
                 beginLightProgram(ShaderUtil.entityLightProgram);
@@ -101,6 +103,7 @@ public class EventManager {
                 // if it were at the last rendered entity.
                 Entity viewer = mc.getRenderViewEntity();
                 ShaderUtil.entityLightProgram.setUniform("entityPos", 0f, viewer != null ? viewer.getEyeHeight() : 0f, 0f);
+                ShaderUtil.entityLightProgram.setUniform("lightingEnabled", GL11.glIsEnabled(GL11.GL_LIGHTING));
                 precedesEntities = true;
                 break;
             case "gui":
@@ -147,6 +150,8 @@ public class EventManager {
             ShaderUtil.entityLightProgram.useShader();
         }
         if (ShaderManager.isCurrentShader(ShaderUtil.entityLightProgram)) {
+            // a renderer that tinted the previous entity without unsetBrightness() must not tint this one
+            RenderUtil.clearEntityOverlay();
             Vec3d cam = LightManager.getCameraPos();
             float pt = Minecraft.getMinecraft().getRenderPartialTicks();
             double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * pt;

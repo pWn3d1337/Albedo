@@ -22,6 +22,8 @@ uniform Light lights[100];
 uniform int lightCount;
 uniform int maxLights;
 uniform float ticks;
+// 1 while GL_LIGHTING is enabled: the shader replaces the fixed-function vertex lighting, so it has to apply it itself
+uniform int lightingEnabled;
 
 float distSq(vec3 a, vec3 b) {
 	vec3 d = a - b;
@@ -36,6 +38,19 @@ vec3 snormalize(vec3 v) {
 //Returns the *angle* between two vectors of any length
 float angle(vec3 a, vec3 b) {
 	return acos(clamp(dot(snormalize(a), snormalize(b)), -1.0, 1.0));
+}
+
+//Vertex colour of the fixed-function pipeline with GL_LIGHTING and GL_COLOR_MATERIAL (ambient and diffuse), as set up by
+//RenderHelper.enableStandardItemLighting: the directional shading of items, mobs and block entities. Lights are
+//directional (w = 0) and their positions are already in eye space.
+vec4 fixedFunctionLighting(vec4 color) {
+	vec3 normal = normalize(gl_NormalMatrix * gl_Normal);
+	vec3 lit = gl_LightModel.ambient.rgb * color.rgb;
+	for (int i = 0; i < 2; i ++) {
+		float diffuse = max(dot(normal, normalize(gl_LightSource[i].position.xyz)), 0.0);
+		lit += (gl_LightSource[i].ambient.rgb + gl_LightSource[i].diffuse.rgb * diffuse) * color.rgb;
+	}
+	return vec4(clamp(lit, 0.0, 1.0), color.a);
 }
 
 //Intensity of one light at a position: cone attenuation combined with distance attenuation
@@ -66,7 +81,7 @@ void main() {
 
 	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 
-	gl_FrontColor = gl_Color;
+	gl_FrontColor = (lightingEnabled == 1) ? fixedFunctionLighting(gl_Color) : gl_Color;
 
 	float sumR = 0.0;
 	float sumG = 0.0;
